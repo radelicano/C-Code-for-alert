@@ -1,0 +1,120 @@
+using System;
+using System.Net;
+using System.Net.Mail;
+using System.Data;
+using System.Data.OleDb;
+
+namespace SendMailViaGmail
+{
+    class Program
+    {
+
+
+        static void Main(string[] args)
+        {
+            string connectionString =
+       "Provider = Microsoft.ACE.OLEDB.12.0; Data Source = C:\\SP500Alert\\Database1.accdb";
+
+            string queryString =
+            "SELECT * FROM alerttest";
+
+            using (OleDbConnection connection =
+          new OleDbConnection(connectionString))
+            {
+                
+                OleDbCommand command = new OleDbCommand(queryString, connection);
+                connection.Open();
+                OleDbDataReader reader = command.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    string name = reader.GetString(1);
+                    int timediff = reader.GetInt32(5);
+                    string nasdaq = "NQ";
+                    string sp500 = "ES";
+
+                    if (timediff > 5)
+                    {
+                        int hours = timediff - 5;
+
+                        if (name == sp500)
+                        {
+                            string name1 = "SP500";
+                            name = name1;
+                           
+                        }
+                        if (name == nasdaq)
+                        {
+
+                            string name2 = "NASDAQ";
+                            name = name2;
+                        }
+                    
+
+
+            //Specify senders gmail address
+            string SendersAddress = "iamrenzx@gmail.com";
+            //Specify The Address You want to sent Email To(can be any valid email address)
+            string ReceiversAddress = "radelicano@tastradesoft.com";
+            string ReceiversAddress1 = "mceballos@tastradesoft.com";
+            //Specify The password of gmial account u are using to sent mail(pw of sender@gmail.com)
+            const string SendersPassword = "nonoobsallowed";
+            //Write the subject of ur mail
+            const string subject = "Breadth Alert";
+            //Write the contents of your mail
+            string body = name + " Not Updating for " + hours + " Hour(s)";
+
+
+            try
+            {
+                //we will use Smtp client which allows us to send email using SMTP Protocol
+                //i have specified the properties of SmtpClient smtp within{}
+                //gmails smtp server name is smtp.gmail.com and port number is 587
+                SmtpClient smtp = new SmtpClient
+                {
+                    Host = "smtp.gmail.com",
+                    Port = 587,
+                    EnableSsl = true,
+                    DeliveryMethod = SmtpDeliveryMethod.Network,
+                    Credentials = new NetworkCredential(SendersAddress, SendersPassword),
+                    Timeout = 15000
+                };
+
+                //MailMessage represents a mail message
+                //it is 4 parameters(From,TO,subject,body)
+
+                MailMessage message = new MailMessage(SendersAddress, ReceiversAddress, subject, body);
+                /*WE use smtp sever we specified above to send the message(MailMessage message)*/
+                MailMessage message1 = new MailMessage(SendersAddress, ReceiversAddress1, subject, body); 
+                smtp.Send(message);
+                smtp.Send(message1);
+                Console.WriteLine("Message Sent Successfully");
+          
+                
+            }
+
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.ReadKey();
+            }
+
+                    }
+                    else
+                    {
+
+                        
+                        Console.WriteLine(name + " Server Updated");
+                            
+                    }
+                }
+                reader.Close();
+
+
+            }
+
+          
+
+        }
+    }
+}
